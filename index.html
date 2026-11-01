@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain Challenge 3D</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Aquí p5.js dibuja el canvas WEBGL -->
+  <div id="lienzo"></div>
+
+  <!-- MENÚ PRINCIPAL -->
+  <div id="menu" class="overlay">
+    <div class="panel">
+      <h1>Brain Challenge <span class="acento">3D</span></h1>
+      <p class="sub">Entrenamiento cognitivo en tres dimensiones</p>
+
+      <button id="btn-jugar1" class="btn grande">▶ Grilla de memoria 3D</button>
+      <button id="btn-jugar-rubik" class="btn grande">▶ Cubo Rubik: desafío</button>
+      <button id="btn-rubik-libre" class="btn grande">▶ Cubo Rubik: estilo libre</button>
+      <button id="btn-jugar-tateti" class="btn grande">▶ Ta-Te-Ti 3D (3 fichas)</button>
+      <button class="btn grande" disabled>Secuencia 3D (próximamente)</button>
+      <button class="btn grande" disabled>Conteo rápido (próximamente)</button>
+      <button id="btn-info" class="btn secundario">¿Qué entrenás con este juego?</button>
+    </div>
+  </div>
+
+  <!-- PANTALLA DIDÁCTICA -->
+  <div id="info" class="overlay oculto">
+    <div class="panel ancho">
+      <h2>¿Qué entrenás?</h2>
+      <ul>
+        <li><strong>Memoria de trabajo visoespacial:</strong> retener posiciones mientras el cubo gira.</li>
+        <li><strong>Rotación mental 3D:</strong> imaginar cómo se ve el objeto desde otro ángulo.</li>
+        <li><strong>Atención y concentración:</strong> mirar con foco durante pocos segundos.</li>
+      </ul>
+      <h3>Cómo se juega</h3>
+      <ol>
+        <li>Se iluminan algunos cubitos. ¡Memorizá dónde están!</li>
+        <li>Se apagan y el cubo gira.</li>
+        <li>Tocá los cubitos que recordás. Podés arrastrar para girar la vista.</li>
+        <li>Apretá <strong>Confirmar</strong>. Si acertás, sube el nivel.</li>
+      </ol>
+
+      <h3>Cubo Rubik 3D: deshacé la mezcla</h3>
+      <ul>
+        <li><strong>Razonamiento espacial y rotación mental:</strong> imaginar cómo cambia el cubo antes de girar una cara.</li>
+        <li><strong>Memoria de trabajo y planificación:</strong> recordar cómo se mezcló y armar la secuencia para deshacerlo.</li>
+      </ul>
+      <ol>
+        <li>Mirá cómo se mezcla el cubo (en cada nivel hay un movimiento más).</li>
+        <li>Girá las caras con los botones de colores: ↻ es sentido horario mirando esa cara de frente.</li>
+        <li>Arrastrá para dar vuelta el cubo y verlo desde otro lado. Ganás puntos si lo resolvés con pocos movimientos.</li>
+      </ol>
+      <p>En <strong>estilo libre</strong> el cubo empieza resuelto: girá lo que quieras, apretá <strong>Mezclar</strong> para desordenarlo y <strong>Deshacer</strong> para volver atrás. Si te trabás: <strong>📖 Guía</strong> enseña el método paso a paso (y puede ejecutar cada algoritmo), <strong>💡 Pista</strong> marca el próximo giro y <strong>✨ Resolver</strong> lo resuelve solo.</p>
+
+      <h3>Ta-Te-Ti 3D de 3 fichas</h3>
+      <ul>
+        <li><strong>Planificación y anticipación:</strong> pensar la jugada del rival antes de mover.</li>
+        <li><strong>Memoria de trabajo y razonamiento espacial:</strong> seguir dónde está cada ficha, aun cuando el tablero gira.</li>
+      </ul>
+      <ol>
+        <li>Cada uno coloca sus 3 fichas, de a una por turno.</li>
+        <li>Después, en cada turno hay que <strong>mover una ficha</strong> a una casilla vacía contigua, solo en horizontal o vertical (no en diagonal).</li>
+        <li>Gana quien arma 3 en línea. Podés jugar contra la compu (fácil, medio o difícil) o con un amigo.</li>
+      </ol>
+      <button id="btn-cerrar-info" class="btn grande">Entendido</button>
+    </div>
+  </div>
+
+  <!-- HUD DEL JUEGO -->
+  <div id="hud" class="oculto">
+    <div id="barra">
+      <span id="hud-nivel">Nivel 1</span>
+      <span id="hud-vidas">♥♥♥</span>
+      <span id="hud-puntos">0 pts</span>
+    </div>
+    <div id="mensaje"></div>
+    <div id="acciones">
+      <button id="btn-confirmar" class="btn grande oculto">Confirmar</button>
+      <button id="btn-salir" class="btn secundario">Salir al menú</button>
+    </div>
+  </div>
+
+  <!-- HUD DEL CUBO RUBIK (los botones de giro los crea rubik.js) -->
+  <div id="hud-rubik" class="oculto">
+    <div id="barra-rubik">
+      <span id="rb-nivel">Nivel 1</span>
+      <span id="rb-movs">Movimientos: 0</span>
+      <span id="rb-puntos">0 pts</span>
+    </div>
+    <div id="rb-mensaje"></div>
+    <div id="rb-panel">
+      <div id="rb-controles"></div>
+      <div id="rb-acciones">
+        <button id="rb-reiniciar" class="btn secundario rb-solo-desafio">Nueva mezcla</button>
+        <button id="rb-mezclar" class="btn secundario rb-solo-libre oculto">Mezclar</button>
+        <button id="rb-deshacer" class="btn secundario rb-solo-libre oculto">Deshacer</button>
+        <button id="rb-guia-btn" class="btn secundario rb-solo-libre oculto">📖 Guía</button>
+        <button id="rb-pista" class="btn secundario rb-solo-libre rb-ayuda oculto">💡 Pista</button>
+        <button id="rb-resolver" class="btn secundario rb-solo-libre rb-ayuda oculto">✨ Resolver</button>
+        <button id="rb-resetear" class="btn secundario rb-solo-libre oculto">Cubo resuelto</button>
+        <button id="rb-salir" class="btn secundario">Salir al menú</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GUÍA PARA RESOLVER EL CUBO (estilo libre) -->
+  <aside id="rb-guia" class="oculto">
+    <div id="rb-guia-cabecera">
+      <h2>Cómo resolver el cubo</h2>
+      <button id="rb-guia-cerrar" class="btn secundario" title="Cerrar la guía">✕</button>
+    </div>
+    <div id="rb-guia-marco-caja">
+      <span>Cara de frente (pasos 2, 3, 6 y 7):</span>
+      <div id="rb-guia-marco"></div>
+    </div>
+    <div id="rb-guia-cuerpo"></div>
+  </aside>
+
+  <!-- CONFIGURACIÓN DEL TA-TE-TI -->
+  <div id="tt-config" class="overlay oculto">
+    <div class="panel ancho">
+      <h2>Ta-Te-Ti 3D · 3 fichas</h2>
+      <ol>
+        <li>Cada uno coloca sus 3 fichas, de a una por turno.</li>
+        <li>Después, en cada turno <strong>tenés que mover una ficha</strong> a una casilla vacía contigua, solo en horizontal o vertical (no en diagonal).</li>
+        <li>Gana quien arma 3 en línea. Si pasan muchos movimientos sin ganador, es empate.</li>
+      </ol>
+      <h3>Oponente</h3>
+      <div id="tt-oponentes" class="opciones">
+        <button class="btn" data-op="facil">Fácil</button>
+        <button class="btn activo" data-op="medio">Medio</button>
+        <button class="btn" data-op="dificil">Difícil</button>
+        <button class="btn" data-op="amigo">2 jugadores</button>
+      </div>
+      <label class="check">
+        <input type="checkbox" id="tt-giratorio">
+        <span>Tablero giratorio: después de cada jugada el tablero gira (más rotación mental)</span>
+      </label>
+      <button id="tt-jugar" class="btn grande">Jugar</button>
+      <button id="tt-volver" class="btn secundario">Volver al menú</button>
+    </div>
+  </div>
+
+  <!-- HUD DEL TA-TE-TI -->
+  <div id="hud-tateti" class="oculto">
+    <div id="barra-tt">
+      <span id="tt-turno"></span>
+      <span id="tt-marcador"></span>
+    </div>
+    <div id="tt-mensaje"></div>
+    <div id="tt-acciones">
+      <button id="tt-nueva" class="btn secundario">Nueva partida</button>
+      <button id="tt-salir" class="btn secundario">Salir al menú</button>
+    </div>
+  </div>
+
+  <!-- FIN DE PARTIDA -->
+  <div id="fin" class="overlay oculto">
+    <div class="panel">
+      <h2>Fin de la partida</h2>
+      <p id="fin-texto"></p>
+      <button id="btn-reintentar" class="btn grande">Jugar de nuevo</button>
+      <button id="btn-menu" class="btn secundario">Volver al menú</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <script src="rubik.js"></script>
+  <script src="guia.js"></script>
+  <script src="tateti.js"></script>
+  <script src="sketch.js"></script>
+</body>
+</html>
